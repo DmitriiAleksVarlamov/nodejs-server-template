@@ -1,6 +1,6 @@
 # nodejs-server-decorators-template
 
-## Several detail about the project:
+## Several details about the project:
 
 ### GOALS: 
   - Practise with typescript decorators.
