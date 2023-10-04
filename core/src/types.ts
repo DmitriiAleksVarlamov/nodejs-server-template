@@ -1,3 +1,5 @@
+import {ClassType} from "./utils/container";
+
 export type RouteDefinition = {
     // Path to our route
     path: string;
@@ -5,4 +7,9 @@ export type RouteDefinition = {
     requestMethod: 'get' | 'post' | 'delete' | 'options' | 'put';
     // Method name within our class responsible for this route
     methodName: string;
+}
+
+export type Pattern = RouteDefinition & {
+    Controller: ClassType,
+    regExp?: RegExp
 }

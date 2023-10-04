@@ -6,4 +6,9 @@ export class UserController {
     getUsers() {
         return 'getUsers'
     }
+
+    @Get('/user/:id/')
+    getUserById() {
+        return 'getUserById!'
+    }
 }
