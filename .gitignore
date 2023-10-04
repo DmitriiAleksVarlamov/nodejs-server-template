@@ -1,1 +1,7 @@
 .idea/
+app/dist/
+app/node_modules/
+app/common/
+core/dist/
+core/node_modules/
+core/common/
