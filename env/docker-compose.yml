@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  env:
+    container_name: 'env'
+    image: 'nginx:latest'
+    restart: 'no'
+    volumes:
+      - '$PWD/balancer/sites-enabled:/etc/nginx/sites-enabled'
+      - '$PWD/balancer/nginx.conf:/etc/nginx/nginx.conf'
+    ports:
+      - '9000:9000'
+  app:
+    container_name: 'app'
+    image: 'node:latest'
+    restart: 'no'
+    working_dir: '/mnt/project'
+    volumes:
+      - '$PWD/../app:/mnt/project'
+      - '$PWD/../core:/mnt/project/common/core'
+    command: [ 'npm', 'start' ]
+
+  libraries:
+    container_name: 'libraries'
+    image: 'node:latest'
+    restart: 'no'
+    working_dir: '/mnt'
+    volumes:
+      - '$PWD/../core:/mnt/core'
+    tty: true
