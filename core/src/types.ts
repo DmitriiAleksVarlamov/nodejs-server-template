@@ -11,5 +11,7 @@ export type RouteDefinition = {
 
 export type Pattern = RouteDefinition & {
     Controller: ClassType,
-    regExp?: RegExp
+    pathname: string | RegExp;
+    regExp?: RegExp;
+    paramKeys: string[];
 }

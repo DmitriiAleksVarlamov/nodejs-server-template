@@ -1,5 +1,6 @@
-import { Injectable } from "../decorators";
+import {Injectable} from "../decorators";
 import {Pattern, RouteDefinition} from "../types";
+import {Container} from "../utils/container";
 
 @Injectable
 export class RouterService {
@@ -11,16 +12,32 @@ export class RouterService {
             this.controllers.push(target)
         }
     }
-    run(pattern: string) {
+    async run(pathname: string, ctx: {}) {
+        const result = { status: 200, body: null}
 
+        try {
+            const response = await this.execute(pathname, ctx)
+
+            if (response instanceof Response) {
+                result.status = response.status
+                result.body = response.body
+            } else {
+                result.body = response
+            }
+        } catch(error) {
+            result.status = 500
+            result.body = error.message
+        }
+
+        return result
     }
     init() {
-        console.log('RouterService')
-
         this.prepareRoutes()
     }
 
     private prepareRoutes() {
+        this.patterns = []
+
         RouterService.controllers.forEach((Controller) => {
             const prefix: string = Reflect.getMetadata('prefix', Controller);
             const routes: Array<RouteDefinition> = Reflect.getMetadata('routes', Controller);
@@ -32,24 +49,68 @@ export class RouterService {
 
                 const params: Pattern = {
                     ...route,
-                    path,
+                    pathname: path,
                     Controller,
+                    paramKeys: [],
                 }
 
-                if (path.match(/(.*)\/:(.+)/)) {
-                    // params.keyParams = [];
-                    const r = path.replace(/(.*)\/:(.+)\/?/ig, (_: string, attr: string, key: string) => {
-                        console.log({_, attr, key})
+                if (path.match(/(.*)\/(:.+)/)) {
+                    const r = path.replace(/:(\w+)(\/?)/gi, (_: string, key: string, slash: string) => {
+                        params.paramKeys.push(key);
 
-                        // params.keyParams.push({ attr, key });
-                        return '(' + key + ')';
+                        return '(' + '.*' + ')' + slash
                     });
-                    params.regExp = new RegExp(r);
+                    params.pathname = new RegExp(r, 'i');
                 }
+
+                return params
             })
             this.patterns.push(...endpoints)
         })
 
         this.patterns.sort((a: Pattern) => a.regExp ? 1 : -1);
+    }
+
+    private async execute<T>(pathname: string, ctx: {}) {
+        const route = this.matchRoute(pathname, this.patterns)
+
+        if (route) {
+            const params = this.formatRouteParams(route.pathname, pathname, route.paramKeys)
+
+            const container = Container.getInstance()
+
+            return await container.instantiate(route.Controller)[route.methodName]({ ...ctx, params })
+        }
+    }
+
+    private formatRouteParams(regexp: RegExp | string, pathname: string, paramKeys: string[]) {
+        const params = {}
+
+        if (typeof regexp === 'string') {
+            return params
+        }
+
+        const paramsAmount = paramKeys.length + 1;
+        const matchedParams = pathname.match(regexp)
+
+        if (matchedParams) {
+            const paramValues = matchedParams.slice(1, paramsAmount)
+
+            paramKeys.forEach((key, index) => {
+                params[key] = paramValues[index]
+            })
+        }
+
+        return params
+    }
+
+    private matchRoute(pathname: string, patterns: Pattern[]): Pattern | undefined {
+        return patterns.find((pattern) => {
+            if (pattern.pathname instanceof RegExp) {
+                return pattern.pathname.test(pathname)
+            }
+
+            return pathname === pattern.pathname
+        })
     }
 }
