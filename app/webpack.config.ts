@@ -24,7 +24,7 @@ const commonConfig= merge([
     {
         externals: [nodeExternals()]
     },
-    parts.webpackShellPlugin(),
+    // parts.webpackShellPlugin(),
     parts.javascriptLoader(),
     parts.clean(),
 ])

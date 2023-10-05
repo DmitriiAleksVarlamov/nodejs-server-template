@@ -1,6 +1,8 @@
 import * as http from 'node:http';
 import { RouterService } from "./router.service";
 import { Injectable, Resolver } from "../decorators";
+import {makeLogger} from "ts-loader/dist/logger";
+import * as Stream from "stream";
 
 @Injectable
 export class HttpService {
@@ -16,12 +18,10 @@ export class HttpService {
     }
 
     init() {
-        this.on('request',(req, res) => {
-            console.log({req: req.url})
-            this.routerService.init()
-            // this.authService.init()
+        this.on('request',async (req, res) => {
+            const response = await this.routerService.run(req.url, {})
 
-            res.write('hello world', 'utf8')
+            res.write(JSON.stringify(response) || '', 'utf8')
             res.end()
         })
 
