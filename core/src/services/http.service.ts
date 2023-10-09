@@ -20,37 +20,31 @@ export class HttpService {
 
     init() {
         this.on('request',async (req, res) => {
-            function write() {
-                let body = ''
-                req.setEncoding('utf8')
+            let body = ''
+            req.setEncoding('utf8')
 
-                req.on('data', (chunk) => {
-                    body += chunk;
-                });
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
 
-                req.on('end', async () => {
-                    let response: Record<string, unknown>
+            req.on('end', async () => {
+                let response: Record<string, unknown>
 
-                    try {
-                        const data = JSON.parse(body)
+                try {
+                    const data = JSON.parse(body)
 
-                        response = await this.routerService.run(req.url, {
-                            body: data,
-                            method: req.method,
-                        })
-                    } catch(error) {
-                        response = { status: 400, message: error.message }
-                    }
+                    response = await this.routerService.run(req.url, {
+                        body: data,
+                        method: req.method,
+                    })
+                } catch(error) {
+                    response = { status: 400, message: error.message }
+                }
 
 
-                    res.write(JSON.stringify(response))
-                    res.end()
-                })
-
-                req.once('drain', () => write.call(this))
-            }
-
-            write.call(this)
+                res.write(JSON.stringify(response))
+                res.end()
+            })
         })
 
         this.on('error', (error) => {
