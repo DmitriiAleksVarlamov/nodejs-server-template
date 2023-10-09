@@ -1,7 +1,7 @@
 import "reflect-metadata";
-import { RouteDefinition } from "../types";
+import {Methods, RouteDefinition} from "../types";
 import {RouterService} from "../services/router.service";
-export function Get(pattern: string) {
+export function Endpoint(method: RouteDefinition['requestMethod'], pattern: string) {
     return (target: any, propertyName: string) => {
         // Register Controller class in RouterService controller list
         RouterService.register(target.constructor)
@@ -14,7 +14,7 @@ export function Get(pattern: string) {
         const routes = Reflect.getMetadata('routes', target.constructor) as Array<RouteDefinition>;
 
         routes.push({
-            requestMethod: 'get',
+            requestMethod: method,
             path :pattern,
             methodName: propertyName
         });

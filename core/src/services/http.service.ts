@@ -3,6 +3,7 @@ import { RouterService } from "./router.service";
 import { Injectable, Resolver } from "../decorators";
 import {makeLogger} from "ts-loader/dist/logger";
 import * as Stream from "stream";
+import { pipeline } from 'stream/promises';
 
 @Injectable
 export class HttpService {
@@ -19,15 +20,47 @@ export class HttpService {
 
     init() {
         this.on('request',async (req, res) => {
-            const response = await this.routerService.run(req.url, {})
+            let body = ''
+            req.setEncoding('utf8')
 
-            res.write(JSON.stringify(response) || '', 'utf8')
-            res.end()
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
+
+            req.on('end', async () => {
+                let response: Record<string, unknown>
+
+                try {
+                    const data = JSON.parse(body)
+
+                    response = await this.routerService.run(req.url, {
+                        body: data,
+                        method: req.method,
+                    })
+                } catch(error) {
+                    response = { status: 400, message: error.message }
+                }
+
+
+                res.write(JSON.stringify(response))
+                res.end()
+            })
         })
 
         this.on('error', (error) => {
             console.log(error)
         })
+    }
+
+    async getBody(req: http.IncomingMessage) {
+        const  pipelinePromise = await pipeline(
+            req,
+            async function* (source) {
+                for await (const chunk of source) {
+                    yield chunk
+                }
+            },
+        );
     }
 
     /*async*/ listen(port = 5000, host = '0.0.0.0') {

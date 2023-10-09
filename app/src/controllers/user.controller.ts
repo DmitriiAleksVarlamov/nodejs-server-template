@@ -1,13 +1,14 @@
-import {Controller, Get} from "@common/core/decorators";
+import { Controller, Endpoint } from "@common/core/decorators";
+import {Methods} from "@common/core/types";
 
 @Controller('/api/v1')
 export class UserController {
-    @Get('/users')
+    @Endpoint(Methods.GET, '/users')
     getUsers() {
         return 'getUsers'
     }
 
-    @Get('/user/:id/:value')
+    @Endpoint(Methods.GET,'/user/:id/:value')
     getUserById() {
         return 'getUserById!'
     }
