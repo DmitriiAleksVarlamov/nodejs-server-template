@@ -1,5 +1,5 @@
 import {Injectable} from "../decorators";
-import {Pattern, RouteDefinition} from "../types";
+import {Context, Pattern, RouteDefinition} from "../types";
 import {Container} from "../utils/container";
 
 @Injectable
@@ -12,9 +12,10 @@ export class RouterService {
             this.controllers.push(target)
         }
     }
-    async run(pathname: string, ctx: {}) {
+    async run(pathname: string, ctx: Context) {
         const result = { status: 200, body: null}
 
+        console.log(ctx)
         try {
             const response = await this.execute(pathname, ctx)
 
