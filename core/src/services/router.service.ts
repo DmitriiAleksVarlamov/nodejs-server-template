@@ -15,7 +15,6 @@ export class RouterService {
     async run(pathname: string, ctx: Context) {
         const result = { status: 200, body: null}
 
-        console.log(ctx)
         try {
             const response = await this.execute(pathname, ctx)
 
@@ -72,8 +71,8 @@ export class RouterService {
         this.patterns.sort((a: Pattern) => a.regExp ? 1 : -1);
     }
 
-    private async execute<T>(pathname: string, ctx: {}) {
-        const route = this.matchRoute(pathname, this.patterns)
+    private async execute<T>(pathname: string, ctx: Context) {
+        const route = this.matchRoute(pathname, this.patterns, ctx)
 
         if (route) {
             const params = this.formatRouteParams(route.pathname, pathname, route.paramKeys)
@@ -105,13 +104,14 @@ export class RouterService {
         return params
     }
 
-    private matchRoute(pathname: string, patterns: Pattern[]): Pattern | undefined {
+    private matchRoute(pathname: string, patterns: Pattern[], ctx: Context): Pattern | undefined {
         return patterns.find((pattern) => {
+            const isSameMethod = ctx.method === pattern.methodName
             if (pattern.pathname instanceof RegExp) {
-                return pattern.pathname.test(pathname)
+                return pattern.pathname.test(pathname) && isSameMethod
             }
 
-            return pathname === pattern.pathname
+            return pathname === pattern.pathname && isSameMethod
         })
     }
 }
