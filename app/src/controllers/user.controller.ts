@@ -12,4 +12,9 @@ export class UserController {
     getUserById() {
         return 'getUserById!'
     }
+
+    @Endpoint(Methods.POST,'/user/:id')
+    createUser() {
+        return 'getUserById POST!'
+    }
 }

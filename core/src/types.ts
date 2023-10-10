@@ -28,3 +28,9 @@ export type Context = {
     method: http.IncomingMessage["method"];
     body: Record<string, unknown>;
 }
+
+export enum StatusCodes {
+    ok = 200,
+    badRequest = 400,
+    forbidden = 404,
+}

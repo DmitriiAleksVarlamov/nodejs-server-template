@@ -1,6 +1,7 @@
 import {Injectable} from "../decorators";
-import {Context, Pattern, RouteDefinition} from "../types";
+import {Context, Pattern, RouteDefinition, StatusCodes} from "../types";
 import {Container} from "../utils/container";
+import {BadRequestError} from "../errors/bad.request.error";
 
 @Injectable
 export class RouterService {
@@ -15,7 +16,6 @@ export class RouterService {
     async run(pathname: string, ctx: Context) {
         const result = { status: 200, body: null}
 
-        console.log(ctx)
         try {
             const response = await this.execute(pathname, ctx)
 
@@ -26,7 +26,7 @@ export class RouterService {
                 result.body = response
             }
         } catch(error) {
-            result.status = 500
+            result.status = error.status ?? 500
             result.body = error.message
         }
 
@@ -72,16 +72,18 @@ export class RouterService {
         this.patterns.sort((a: Pattern) => a.regExp ? 1 : -1);
     }
 
-    private async execute<T>(pathname: string, ctx: {}) {
-        const route = this.matchRoute(pathname, this.patterns)
+    private async execute<T>(pathname: string, ctx: Context) {
+        const route = this.matchRoute(pathname, this.patterns, ctx)
 
-        if (route) {
-            const params = this.formatRouteParams(route.pathname, pathname, route.paramKeys)
-
-            const container = Container.getInstance()
-
-            return await container.instantiate(route.Controller)[route.methodName]({ ...ctx, params })
+        if (typeof route === 'undefined') {
+            throw new BadRequestError(`Cannot find a route  ${pathname} or method ${ctx.method}`, StatusCodes.forbidden)
         }
+
+        const params = this.formatRouteParams(route.pathname, pathname, route.paramKeys)
+
+        const container = Container.getInstance()
+
+        return await container.instantiate(route.Controller)[route.methodName]({ ...ctx, params })
     }
 
     private formatRouteParams(regexp: RegExp | string, pathname: string, paramKeys: string[]) {
@@ -105,13 +107,15 @@ export class RouterService {
         return params
     }
 
-    private matchRoute(pathname: string, patterns: Pattern[]): Pattern | undefined {
+    private matchRoute(pathname: string, patterns: Pattern[], ctx: Context): Pattern | undefined {
         return patterns.find((pattern) => {
+            const isSameMethod = ctx.method === pattern.requestMethod
+
             if (pattern.pathname instanceof RegExp) {
-                return pattern.pathname.test(pathname)
+                return pattern.pathname.test(pathname) && isSameMethod
             }
 
-            return pathname === pattern.pathname
+            return pathname === pattern.pathname && isSameMethod
         })
     }
 }

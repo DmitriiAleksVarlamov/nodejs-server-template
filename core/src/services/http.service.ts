@@ -38,7 +38,7 @@ export class HttpService {
                         method: req.method,
                     })
                 } catch(error) {
-                    response = { status: 400, message: error.message }
+                    response = { status: error.status, message: error.message }
                 }
 
 
