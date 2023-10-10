@@ -4,6 +4,7 @@ import { Injectable, Resolver } from "../decorators";
 import {makeLogger} from "ts-loader/dist/logger";
 import * as Stream from "stream";
 import { pipeline } from 'stream/promises';
+import {Context} from "../types";
 
 @Injectable
 export class HttpService {
@@ -28,19 +29,17 @@ export class HttpService {
             });
 
             req.on('end', async () => {
-                let response: Record<string, unknown>
-
-                try {
-                    const data = JSON.parse(body)
-
-                    response = await this.routerService.run(req.url, {
-                        body: data,
-                        method: req.method,
-                    })
-                } catch(error) {
-                    response = { status: error.status, message: error.message }
+                const context: Context = {
+                    method: req.method,
                 }
 
+                const response = await this.routerService.run(req.url, context)
+
+                try {
+                    context.body = JSON.parse(body)
+                } catch(error) {
+                    // подумать как сделать так, чтобы при инвалидном JSON и запросах PUT, POST, etc боди было пустым
+                }
 
                 res.write(JSON.stringify(response))
                 res.end()

@@ -26,7 +26,7 @@ export type Pattern = RouteDefinition & {
 
 export type Context = {
     method: http.IncomingMessage["method"];
-    body: Record<string, unknown>;
+    body?: Record<string, unknown>;
 }
 
 export enum StatusCodes {
