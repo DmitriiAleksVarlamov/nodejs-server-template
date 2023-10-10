@@ -1,6 +1,7 @@
 import {Injectable} from "../decorators";
-import {Context, Pattern, RouteDefinition} from "../types";
+import {Context, Pattern, RouteDefinition, StatusCodes} from "../types";
 import {Container} from "../utils/container";
+import {BadRequestError} from "../errors/bad.request.error";
 
 @Injectable
 export class RouterService {
@@ -25,7 +26,7 @@ export class RouterService {
                 result.body = response
             }
         } catch(error) {
-            result.status = 500
+            result.status = error.status ?? 500
             result.body = error.message
         }
 
@@ -74,13 +75,15 @@ export class RouterService {
     private async execute<T>(pathname: string, ctx: Context) {
         const route = this.matchRoute(pathname, this.patterns, ctx)
 
-        if (route) {
-            const params = this.formatRouteParams(route.pathname, pathname, route.paramKeys)
-
-            const container = Container.getInstance()
-
-            return await container.instantiate(route.Controller)[route.methodName]({ ...ctx, params })
+        if (typeof route === 'undefined') {
+            throw new BadRequestError(`Cannot find a route  ${pathname} or method ${ctx.method}`, StatusCodes.forbidden)
         }
+
+        const params = this.formatRouteParams(route.pathname, pathname, route.paramKeys)
+
+        const container = Container.getInstance()
+
+        return await container.instantiate(route.Controller)[route.methodName]({ ...ctx, params })
     }
 
     private formatRouteParams(regexp: RegExp | string, pathname: string, paramKeys: string[]) {
@@ -106,7 +109,8 @@ export class RouterService {
 
     private matchRoute(pathname: string, patterns: Pattern[], ctx: Context): Pattern | undefined {
         return patterns.find((pattern) => {
-            const isSameMethod = ctx.method === pattern.methodName
+            const isSameMethod = ctx.method === pattern.requestMethod
+
             if (pattern.pathname instanceof RegExp) {
                 return pattern.pathname.test(pathname) && isSameMethod
             }
