@@ -1,17 +1,15 @@
 import { HttpService } from "@common/core/services/http.service";
-import { Resolver } from "@common/core/decorators";
+import { Resolver, Bootstrap, Imports } from "@common/core/decorators";
 import { UserController } from "./controllers/user.controller";
 
-class Bootstrap {
-    @Resolver
-    private static server: HttpService
+@Imports([UserController])
 
-    // @Resolver
-    // private static userController: UserController
-    static init() {
-        const a = new UserController()
+@Bootstrap
+export class Bootstrapper {
+    @Resolver
+    private readonly server: HttpService
+
+    init() {
         this.server.listen()
     }
 }
-
-Bootstrap.init()

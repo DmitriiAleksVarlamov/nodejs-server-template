@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import {Methods, RouteDefinition} from "../types";
 import {RouterService} from "../services/router.service";
+import {Container} from "../utils/container";
 export function Endpoint(method: RouteDefinition['requestMethod'], pattern: string) {
     return (target: any, propertyName: string) => {
         // Register Controller class in RouterService controller list
