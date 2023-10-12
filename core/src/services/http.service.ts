@@ -31,9 +31,10 @@ export class HttpService {
             req.on('end', async () => {
                 const context: Context = {
                     method: req.method,
+                    query: this.getQueries(req),
                 }
 
-                const response = await this.routerService.run(req.url, context)
+                const response = await this.routerService.run(this.getPathname(req), context)
 
                 try {
                     context.body = JSON.parse(body)
@@ -51,15 +52,24 @@ export class HttpService {
         })
     }
 
-    async getBody(req: http.IncomingMessage) {
-        const  pipelinePromise = await pipeline(
-            req,
-            async function* (source) {
-                for await (const chunk of source) {
-                    yield chunk
-                }
-            },
-        );
+    private getQueries(req: http.IncomingMessage): Record<string, string> {
+        const url = this.decomposeUrl(req);
+
+        const queries = {}
+
+        new URLSearchParams(url.search).forEach((value, key) => {
+            queries[key] = value
+        });
+
+        return queries
+    }
+
+    private getPathname(req: http.IncomingMessage): string {
+        return this.decomposeUrl(req).pathname
+    }
+
+    private decomposeUrl(req: http.IncomingMessage): URL {
+        return new URL(req.url, `${req.headers['x-forwarded-proto']}://${req.headers.host}/`);
     }
 
     /*async*/ listen(port = 5000, host = '0.0.0.0') {

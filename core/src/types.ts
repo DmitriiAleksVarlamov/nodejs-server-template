@@ -26,6 +26,7 @@ export type Pattern = RouteDefinition & {
 
 export type Context = {
     method: http.IncomingMessage["method"];
+    query: Record<string, string>;
     body?: Record<string, unknown>;
 }
 
