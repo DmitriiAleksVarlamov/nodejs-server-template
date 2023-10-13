@@ -1,10 +1,7 @@
 import * as http from 'node:http';
 import { RouterService } from "./router.service";
 import { Injectable, Resolver } from "../decorators";
-import {makeLogger} from "ts-loader/dist/logger";
-import * as Stream from "stream";
-import { pipeline } from 'stream/promises';
-import {Context} from "../types";
+import type { Context } from "../types";
 
 @Injectable
 export class HttpService {
@@ -13,8 +10,6 @@ export class HttpService {
     @Resolver
     private routerService: RouterService
 
-    // @Resolver
-    // private authService: AuthService
     private on(event: string, listener: (req: http.IncomingMessage, res: http.ServerResponse) => void) {
         this.server.on(event, listener)
     }
